@@ -1,0 +1,202 @@
+openapi: 3.0.3
+info:
+  title: RESTful API for Authentication
+  version: 0.0.0
+  description: |2
+
+    It's a REST API for a user authentication and authorization system using Django and Django REST Framework. This system support user registration, authentication, token refresh, logout, and allow users to retrieve and update their personal information.
+
+    Authentication utilize Access and Refresh tokens.
+
+    Refresh Token – A UUID stored in the database, issued for 30 days by default.
+
+    Access Token – A JSON Web Token with a default lifespan of 30 seconds.
+
+    Clients may request an Access Token refresh at any time, for instance, upon Access Token expiry by providing a valid Refresh Token. In this case, the service returns a new valid pair of Access and Refresh Tokens, resetting their lifespans.
+paths:
+  /api/login/:
+    post:
+      operationId: api_login_create
+      summary: API endpoint that allows users to login with email and password
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/logout/:
+    post:
+      operationId: api_logout_create
+      summary: API endpoint that allows users to logout, after which refresh token
+        will be deleted
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/me/:
+    get:
+      operationId: api_me_retrieve
+      description: |-
+        For this API endpoint you have to authorize in the upper right corner
+        with access token you get when you login. In format "bearer {access_token}"
+      summary: API endpoint that allows users to be viewed or edited
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: api_me_update
+      description: |-
+        For this API endpoint you have to authorize in the upper right corner
+        with access token you get when you login. In format "bearer {access_token}"
+      summary: API endpoint that allows users to be viewed or edited
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/refresh/:
+    post:
+      operationId: api_refresh_create
+      summary: API endpoint that allows users to refresh their tokens
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRefreshToken'
+          description: ''
+  /api/register/:
+    post:
+      operationId: api_register_create
+      summary: API endpoint that allows users to register with email and password
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+          maxLength: 50
+        email:
+          type: string
+          maxLength: 50
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 50
+      required:
+      - email
+      - id
+      - password
+    UserRefreshToken:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          format: uuid
+          nullable: true
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

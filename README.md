@@ -1,2 +1,2 @@
-# pyshop_restfulapi_auth
+# pyshop_django_rest_auth
  
